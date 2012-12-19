@@ -1,4 +1,3 @@
-
 /**		
  * 
  *	uk.co.soulwire.gui.SimpleGUI
@@ -74,7 +73,7 @@ package uk.co.soulwire.gui
 		private var _components : Vector.<Component> = new Vector.<Component>();
 		private var _parameters : Dictionary = new Dictionary();
 		private var _container : Sprite = new Sprite();
-		private var _target : DisplayObjectContainer;
+		private var _target : Object;
 		private var _active : Component;
 		private var _stage : Stage;
 		
@@ -94,14 +93,17 @@ package uk.co.soulwire.gui
 		private var _hidden : Boolean;
 		
 		private var _showToggle : Boolean = true;
+
+		private var _externalContainer : DisplayObjectContainer;
 		
 		//	----------------------------------------------------------------
 		//	CONSTRUCTOR
 		//	----------------------------------------------------------------
 		
-		public function SimpleGUI(target : DisplayObjectContainer, title : String = null, hotKey : * = null)
+		public function SimpleGUI(container: DisplayObjectContainer, target :Object=null, title : String = null, hotKey : * = null)
 		{
-			_target = target;
+			_externalContainer = container;
+			_target = target||container;
 
 			_toggle.x = MARGIN;
 			_toggle.y = MARGIN;
@@ -116,10 +118,10 @@ package uk.co.soulwire.gui
 			initToolbar();
 			initContextMenu();
 			
-			if (_target.stage) onAddedToStage(null);
-			else _target.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			if (_externalContainer.stage) onAddedToStage(null);
+			else _externalContainer.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 
-			_target.addEventListener(Event.ADDED, onTargetAdded);
+			_externalContainer.addEventListener(Event.ADDED, onTargetAdded);
 			
 			if(hotKey) this.hotKey = hotKey;
 			
@@ -140,9 +142,9 @@ package uk.co.soulwire.gui
 		{
 			_lineV.visible = false;
 			
-			_target.addChild(_container);
-			_target.addChild(_toolbar);
-			_target.addChild(_toggle);
+			_externalContainer.addChild(_container);
+			_externalContainer.addChild(_toolbar);
+			_externalContainer.addChild(_toggle);
 			
 			_hidden = false;
 		}
@@ -155,9 +157,9 @@ package uk.co.soulwire.gui
 		{
 			_lineV.visible = true;
 
-			if (!_showToggle && _target.contains(_toggle)) _target.removeChild(_toggle);
-			if (_target.contains(_container)) _target.removeChild(_container);
-			if (_target.contains(_toolbar)) _target.removeChild(_toolbar);
+			if (!_showToggle && _externalContainer.contains(_toggle)) _externalContainer.removeChild(_toggle);
+			if (_externalContainer.contains(_container)) _externalContainer.removeChild(_container);
+			if (_externalContainer.contains(_toolbar)) _externalContainer.removeChild(_toolbar);
 			
 			_hidden = true;
 		}
@@ -478,7 +480,7 @@ package uk.co.soulwire.gui
 		 * you instead pass the label as a property within the options object
 		 */
 		
-		public function addComboBox(target : String, items : Array, options : Object = null) : StyledCombo
+		public function addComboBox(target : String, items : Array, options : Object = null) : ComboBox
 		{
 			options = parseOptions(target, options);
 			
@@ -492,7 +494,7 @@ package uk.co.soulwire.gui
 			params.defaultLabel = targ[prop];
 			params.numVisibleItems = Math.min(items.length, 5);
 			
-			return addControl(StyledCombo, merge(params, options)) as StyledCombo;
+			return addControl(ComboBox, merge(params, options)) as ComboBox;
 		}
 		
 		/**
@@ -566,6 +568,10 @@ package uk.co.soulwire.gui
 			Style.LABEL_TEXT = 0xEEEEEE;
 			Style.BUTTON_FACE = 0x555555;
 			Style.DROPSHADOW = 0x000000;
+			Style.LIST_DEFAULT = 0x333333;
+			Style.LIST_ALTERNATE = 0x444444;
+			Style.LIST_SELECTED = 0x111111;
+			Style.LIST_ROLLOVER = 0x555555;
 		}
 		
 		private function initToolbar() : void
@@ -609,13 +615,13 @@ package uk.co.soulwire.gui
 		
 		private function initContextMenu() : void
 		{
-			var menu : * = _target.contextMenu || new ContextMenu();
+			var menu : * = _externalContainer.contextMenu || new ContextMenu();
 			var item : ContextMenuItem = new ContextMenuItem("Toggle Controls", true);
 			
 			item.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, onContextMenuItemSelected);
 			menu.customItems.push(item);
 			
-			_target.contextMenu = menu;
+			_externalContainer.contextMenu = menu;
 		}
 		
 		private function commit(component : Component = null) : void
@@ -933,9 +939,9 @@ package uk.co.soulwire.gui
 
 		private function onAddedToStage(event : Event) : void
 		{
-			_stage = _target.stage;
-			_target.removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
-			_target.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPressed);
+			_stage = _externalContainer.stage;
+			_externalContainer.removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			_externalContainer.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPressed);
 		}
 		
 		private function onTargetAdded(event : Event) : void
@@ -1189,15 +1195,3 @@ internal class FileChooser extends Component
 	
 }
 
-internal class StyledCombo extends ComboBox
-{
-	override protected function addChildren() : void
-	{
-		super.addChildren();
-
-		_list.defaultColor = 0x333333;
-		_list.alternateColor = 0x444444;
-		_list.selectedColor = 0x111111;
-		_list.rolloverColor = 0x555555;
-	}
-}

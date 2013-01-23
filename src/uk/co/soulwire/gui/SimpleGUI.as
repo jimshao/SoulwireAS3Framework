@@ -24,6 +24,7 @@ package uk.co.soulwire.gui
 	import com.bit101.components.Component;
 	import com.bit101.components.HUISlider;
 	import com.bit101.components.Label;
+	import com.bit101.components.InputText;
 	import com.bit101.components.NumericStepper;
 	import com.bit101.components.PushButton;
 	import com.bit101.components.RangeSlider;
@@ -348,6 +349,17 @@ package uk.co.soulwire.gui
 			return addControl(CheckBox, merge(params, options)) as CheckBox;
 		}
 		
+		public function addInputText(target : String, options : Object = null) : InputText
+		{
+			options = parseOptions(target, options);
+			
+			var params : Object = {};
+			
+			params.target = target;
+			
+			return addControl(InputText, merge(params, options)) as InputText;
+		}
+
 		public function addButton(label : String, options : Object = null) : PushButton
 		{
 			options = parseOptions(label, options);
@@ -669,6 +681,10 @@ package uk.co.soulwire.gui
 					else if (component is RangeSlider)
 					{
 						target[prop] = component[i == 0 ? "lowValue" : "highValue"];
+					}
+					else if (component is InputText)
+					{
+						target[prop] = (component as InputText).text;
 					}
 					else if (component is ComboBox)
 					{
